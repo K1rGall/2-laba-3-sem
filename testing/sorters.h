@@ -8,6 +8,64 @@
 template <class T>
 class Sorter : public ISorted<T> {
 private:
+    // Вспомогательный буфер для MergeSort
+    DynamicArray<T>* buffer;
+
+    // --- MergeSort Helper Function ---
+    void Merge(int low, int middle, int high, Sequence<T>* sequence) {
+        int i = low;
+        int j = middle + 1;
+        int k = low;
+
+        // Копирование текущего диапазона в буфер
+        for (int idx = low; idx <= high; ++idx) {
+            buffer->Set(idx, sequence->GetElement(idx));
+        }
+
+        // Слияние двух частей из буфера обратно в sequence
+        while (i <= middle && j <= high) {
+            if (buffer->GetElement(i) <= buffer->GetElement(j)) {
+                sequence->Set(k++, buffer->GetElement(i++));
+            } else {
+                sequence->Set(k++, buffer->GetElement(j++));
+            }
+        }
+
+        // Копирование оставшихся элементов
+        while (i <= middle) {
+            sequence->Set(k++, buffer->GetElement(i++));
+        }
+        while (j <= high) {
+            sequence->Set(k++, buffer->GetElement(j++));
+        }
+    }
+
+    // --- Recursive MergeSort Implementation ---
+    void MergeSortRecursive(int low, int high, Sequence<T>* sequence) {
+        if (high - low <= 10) {
+            // Для малых подмассивов используем сортировку вставками
+            for (int i = low + 1; i <= high; ++i) {
+                T key = sequence->GetElement(i);
+                int j = i - 1;
+                while (j >= low && sequence->GetElement(j) > key) {
+                    sequence->Set(j + 1, sequence->GetElement(j));
+                    j--;
+                }
+                sequence->Set(j + 1, key);
+            }
+        } else if (low < high) {
+            int middle = low + (high - low) / 2;
+
+            MergeSortRecursive(low, middle, sequence);
+            MergeSortRecursive(middle + 1, high, sequence);
+
+            // Проверка на упорядоченность перед слиянием
+            if (sequence->GetElement(middle) > sequence->GetElement(middle + 1)) {
+                Merge(low, middle, high, sequence);
+            }
+        }
+    }
+
     // --- QuickSort Helper Function ---
     int Partition(int low, int high, Sequence<T>* sequence) {
         T point = sequence->GetElement(high);
@@ -24,46 +82,7 @@ private:
         sequence->Swap(sequence->GetElement(i), sequence->GetElement(high));
         return i;
     }
-    // --- MergeSort Helper Function ---
-    void Merge(int low, int middle, int high, Sequence<T>* sequence) {
-        int size1 = middle - low + 1;
-        int size2 = high - middle;
 
-        DynamicArray<T> array1(size1);
-        DynamicArray<T> array2(size2);
-        // Copy data to temporary arrays
-        for (int i = 0; i < size1; i++) {
-            array1[i] = sequence->GetElement(low + i);
-        }
-        for (int i = 0; i < size2; i++) {
-            array2[i] = sequence->GetElement(middle + 1 + i);
-        }
-
-        int i = 0, j = 0, k = low;
-
-        // Merge arrays back into the sequence
-        while (i < size1 && j < size2) {
-            if (array1.GetElement(i) <= array2.GetElement(j)) {
-                sequence->Set(k, array1.GetElement(i));
-                i++;
-            } else {
-                sequence->Set(k, array2.GetElement(j));
-                j++;
-            }
-            k++;
-        }
-        // Copy remaining elements
-        while (i < size1) {
-            sequence->Set(k, array1.GetElement(i));
-            i++;
-            k++;
-        }
-        while (j < size2) {
-            sequence->Set(k, array2.GetElement(j));
-            j++;
-            k++;
-        }
-    }
     // --- Recursive QuickSort Implementation ---
     void QuickSortRecursive(int low, int high, Sequence<T>* sequence) {
         if (low < high) {
@@ -73,17 +92,7 @@ private:
             QuickSortRecursive(point + 1, high, sequence);
         }
     }
-    // --- Recursive MergeSort Implementation ---
-    void MergeSortRecursive(int low, int high, Sequence<T>* sequence) {
-        if (low < high) {
-            int middle = low + (high - low) / 2;
 
-            MergeSortRecursive(low, middle, sequence);
-            MergeSortRecursive(middle + 1, high, sequence);
-
-            Merge(low, middle, high, sequence);
-        }
-    }
 public:
     // --- Public QuickSort Entry Point ---
     void QuickSort(Sequence<T>* sequence) override {
@@ -92,7 +101,10 @@ public:
 
     // --- Public MergeSort Entry Point ---
     void MergeSort(Sequence<T>* sequence) override {
-        MergeSortRecursive(0, sequence->GetLength() - 1, sequence);
+        int n = sequence->GetLength();
+        buffer = new DynamicArray<T>(n); // Инициализация буфера
+        MergeSortRecursive(0, n - 1, sequence);
+        delete buffer; // Очистка буфера
     }
 };
 

@@ -1,7 +1,7 @@
 #ifndef SEQUENCE_H
 #define SEQUENCE_H
 
-
+//доработать избежание ввода букв и поломки меню, сделать график на 10млн значений
 template <class T>
 class Sequence {
 public:

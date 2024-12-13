@@ -16,11 +16,11 @@ void GenerateRandomFile(int count, std::string& fileName)
     for (int i = 0; i < count; ++i) {
         People people = People();
 
-        file << people.Getsurname() << " "
+        file << people.GetSurname() << " "
              << people.GetFirstName() << " "
              << people.GetPatronymic() << " "
              << people.GetBirthDate() << " "
-             << people.Getsalary() << "\n";
+             << people.GetSalary() << "\n";
     }
 
     std::cout << "The data have been successfully written to the file " << fileName << std::endl;
@@ -92,11 +92,11 @@ void WriteSequenceToFile(std::string& fileName, Sequence<People>* sequence)
 
     while (*begin != *end)
     {
-        file << (**begin).Getsurname() << " "
+        file << (**begin).GetSurname() << " "
              << (**begin).GetFirstName() << " "
              << (**begin).GetPatronymic() << " "
              << (**begin).GetBirthDate() << " "
-             << (**begin).Getsalary() << "\n";
+             << (**begin).GetSalary() << "\n";
         ++(*begin);
     }
 

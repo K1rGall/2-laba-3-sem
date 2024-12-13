@@ -15,7 +15,11 @@
 #include "testing/DynamicArray.h"
 #include "testing/timesorters.h"
 #include "testing/testing.h"
-//доработать избежание ввода букв и поломки меню, сделать график на 10млн значений
+#include <thread>
+#include <random>
+
+#include <algorithm>
+
 QT_USE_NAMESPACE
 
 // Функция для генерации случайного файла
@@ -40,6 +44,11 @@ void generateRandomFile() {
 
     GenerateRandomFile(countNumbers, fileName);
     std::cout << "Random file generated successfully.\n";
+}
+void generateRandomData(DynamicArray<People>& peoples, int startIndex, int endIndex) {
+    for (int i = startIndex; i < endIndex; i++) {
+        peoples[i] = People();
+    }
 }
 // Функция для сортировки с использованием QuickSort
 void sortQuickSort() {
@@ -229,46 +238,8 @@ private slots:
 private:
     void plotGraph(const QString& sortingMethod)
     {
-        const int max = 100000;  // 100000 элементов
-        const int step = 10000;   // Шаг для увеличения количества элементов
-        std::vector<double> x;
-        std::vector<double> y;
-
-        for (int i = step; i <= max; i += step)
-        {
-            DynamicArray<People> peoples(i);
-
-            // Заполняем массив случайными данными
-            for (int j = 0; j < i; j++)
-            {
-                peoples[j] = People();
-            }
-
-            double duration;
-            if (sortingMethod == "QuickSort")
-            {
-                SortSequenceByQuickSort(&peoples, &duration);
-                x.push_back(i);
-                y.push_back(duration);
-            }
-            else
-            {
-                SortSequenceByMergeSort(&peoples, &duration);
-                x.push_back(i);
-                y.push_back(duration);
-            }
-        }
-
-        if (sortingMethod == "QuickSort")
-            PlotQuickSortGraph(x, y, chartView);
-        else
-            PlotMergeSortGraph(x, y, chartView);
-    }
-
-    void compareSortingGraphs()
-    {
-        const int max = 100000;  // 100000 элементов
-        const int step = 10000;   // Шаг для увеличения количества элементов
+        const int max = 1000000;  // 100000 элементов
+        const int step = 200000;   // Шаг для увеличения количества элементов
         std::vector<double> x;
         std::vector<double> yQuickSort;
         std::vector<double> yMergeSort;
@@ -277,15 +248,89 @@ private:
         {
             DynamicArray<People> peoples(i);
 
-            // Заполняем массив случайными данными
-            for (int j = 0; j < i; j++)
-            {
-                peoples[j] = People();
+            // Использование нескольких потоков для генерации данных
+            int half = i / 2;
+            std::thread t1(generateRandomData, std::ref(peoples), 0, half);
+            std::thread t2(generateRandomData, std::ref(peoples), half, i);
+
+            // Ожидание завершения потоков
+            t1.join();
+            t2.join();
+
+            double durationQuickSort;
+            double durationMergeSort;
+
+            // Сортировка QuickSort
+            SortSequenceByQuickSort(&peoples, &durationQuickSort);
+            x.push_back(i);
+            yQuickSort.push_back(durationQuickSort);
+
+            // Сортировка MergeSort
+            SortSequenceByMergeSort(&peoples, &durationMergeSort);
+            yMergeSort.push_back(durationMergeSort);
+        }
+
+        PlotComparisonGraph(x, yQuickSort, yMergeSort, chartView);
+    }
+
+    void PlotComparisonGraph(std::vector<double>& x, std::vector<double>& yQuickSort, std::vector<double>& yMergeSort, QChartView* chartView) {
+        QLineSeries *seriesQuickSort = new QLineSeries();
+        QLineSeries *seriesMergeSort = new QLineSeries();
+
+        for (size_t i = 0; i < x.size(); i++) {
+            seriesQuickSort->append(x[i], yQuickSort[i]);
+            seriesMergeSort->append(x[i], yMergeSort[i]);
+        }
+
+        QChart *chart = new QChart();
+        chart->addSeries(seriesQuickSort);
+        chart->addSeries(seriesMergeSort);
+
+        chart->setTitle("Sorting Performance Comparison (QuickSort vs MergeSort)");
+        chart->createDefaultAxes();
+
+        // Настроим оси
+        QValueAxis *axisX = new QValueAxis();
+        axisX->setTitleText("Number of Elements");
+        axisX->setLabelFormat("%d");
+        chart->setAxisX(axisX, seriesQuickSort);
+        chart->setAxisX(axisX, seriesMergeSort);
+
+        QValueAxis *axisY = new QValueAxis();
+        axisY->setTitleText("Duration (seconds)");
+        axisY->setLabelFormat("%.5f");
+        chart->setAxisY(axisY, seriesQuickSort);
+        chart->setAxisY(axisY, seriesMergeSort);
+
+        chartView->setChart(chart);
+        chartView->setRenderHint(QPainter::Antialiasing);
+    }
+
+
+    void compareSortingGraphs()
+    {
+        const int max = 1000000;  // Maximum number of elements for testing
+        const int step = 200000;   // Step size for increasing number of elements
+        std::vector<double> x;
+        std::vector<double> yQuickSort;
+        std::vector<double> yMergeSort;
+
+        for (int i = step; i <= max; i += step)
+        {
+            DynamicArray<People> peoples(i);
+
+            // Fill the array with random data once
+            for (int j = 0; j < i; j++) {
+                peoples[j] = People(); // Randomly populate the array
             }
 
             double durationQuickSort;
-            SortSequenceByQuickSort(&peoples, &durationQuickSort);
             double durationMergeSort;
+
+            // QuickSort
+            SortSequenceByQuickSort(&peoples, &durationQuickSort);
+
+            // MergeSort
             SortSequenceByMergeSort(&peoples, &durationMergeSort);
 
             x.push_back(i);
@@ -293,6 +338,7 @@ private:
             yMergeSort.push_back(durationMergeSort);
         }
 
+        // Plot comparison graph for both QuickSort and MergeSort
         PlotComparisonGraph(x, yQuickSort, yMergeSort, chartView);
     }
 private:
@@ -317,16 +363,24 @@ int main(int argc, char *argv[])
         std::cout << "Enter your choice: ";
 
         int choice;
-        std::cin >> choice;
+        while (!(std::cin >> choice)) {
+            std::cout << "Invalid input. Please enter a number between 1 and 9: ";
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+
+        if (choice < 1 || choice > 9) {
+            std::cout << "Invalid choice. Please try again.\n";
+            continue;
+        }
 
         int numElements = 0;
         if (choice >= 1 && choice <= 3) {
             std::cout << "Enter the number of elements: ";
-            std::cin >> numElements;
-
-            if (numElements <= 0) {
-                std::cout << "Invalid number of elements. Please try again.\n";
-                continue;
+            while (!(std::cin >> numElements) || numElements <= 0) {
+                std::cout << "Invalid input. Please enter a positive number: ";
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             }
         }
 
@@ -398,12 +452,9 @@ int main(int argc, char *argv[])
                 std::cout << "Exiting the application. Goodbye!\n";
                 return 0;
             }
-            default: {
-                std::cout << "Invalid choice. Please try again.\n";
-                break;
-            }
         }
     }
 }
+
 
 #include "main.moc"

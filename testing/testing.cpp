@@ -4,7 +4,14 @@
 #include "timesorters.h"
 #include "Sequence.h"
 #include <cassert>
-//убрать копипасту в тестах сортировщиков
+
+template<typename T>
+void TestSorter(void (*sortFunc)(Sequence<T>*), Sequence<T>* sequence, T* expectedArray, int size) {
+    sortFunc(sequence);
+    for (int i = 0; i < size; i++) {
+        assert(sequence->GetElement(i) == expectedArray[i]);
+    }
+}
 template<typename T>
 void QuickSort(Sequence<T>* sequence)
 {
@@ -377,106 +384,59 @@ void LinkedUnionTest() {
 }
 
 
-void QuickSortTest1() {
-    int array[] = {5, 3, 1, 8, 9, 2, 34, -7};
-    int size = 8;
-    int sortedArray[] = {-7, 1, 2, 3, 5, 8, 9, 34};
+void SortingTests() {
+    int array1[] = {5, 3, 1, 8, 9, 2, 34, -7};
+    int sortedArray1[] = {-7, 1, 2, 3, 5, 8, 9, 34};
+    int size1 = 8;
 
-    DynamicArray<int> dynamicArray(array, size);
+    DynamicArray<int> dynamicArray1(array1, size1);
+    TestSorter(QuickSort<int>, &dynamicArray1, sortedArray1, size1);
+    TestSorter(MergeSort<int>, &dynamicArray1, sortedArray1, size1);
 
-    QuickSort(&dynamicArray);
+    int array2[] = {8, 7, 6, 5, 4, 3, 2, 1};
+    int sortedArray2[] = {1, 2, 3, 4, 5, 6, 7, 8};
+    int size2 = 8;
 
-    for (int i = 0; i < size; i++) {
-        assert(dynamicArray.GetElement(i) == sortedArray[i]);
+    DynamicArray<int> dynamicArray2(array2, size2);
+    TestSorter(QuickSort<int>, &dynamicArray2, sortedArray2, size2);
+    TestSorter(MergeSort<int>, &dynamicArray2, sortedArray2, size2);
+
+    int array3[] = {1, 2, 3, 5, 4, 6, 7, 8};
+    int sortedArray3[] = {1, 2, 3, 4, 5, 6, 7, 8};
+    int size3 = 8;
+
+    DynamicArray<int> dynamicArray3(array3, size3);
+    TestSorter(QuickSort<int>, &dynamicArray3, sortedArray3, size3);
+    TestSorter(MergeSort<int>, &dynamicArray3, sortedArray3, size3);
+
+    int array4[] = {1};
+    int sortedArray4[] = {1};
+    int size4 = 1;
+
+    DynamicArray<int> dynamicArray4(array4, size4);
+    TestSorter(QuickSort<int>, &dynamicArray4, sortedArray4, size4);
+    TestSorter(MergeSort<int>, &dynamicArray4, sortedArray4, size4);
+
+    int size5 = 10000;
+    DynamicArray<int> dynamicArray5(0);
+    for (int i = 0; i < size5; i++) {
+        dynamicArray5.Append(rand());
+    }
+
+    QuickSort(&dynamicArray5);
+    for (int i = 0; i < size5 - 1; i++) {
+        assert(dynamicArray5.GetElement(i) <= dynamicArray5.GetElement(i + 1));
+    }
+
+    for (int i = 0; i < size5; i++) {
+        dynamicArray5.Append(rand());
+    }
+    MergeSort(&dynamicArray5);
+    for (int i = 0; i < size5 - 1; i++) {
+        assert(dynamicArray5.GetElement(i) <= dynamicArray5.GetElement(i + 1));
     }
 }
 
-void QuickSortTest2() {
-    int array[] = {1, 2, 3, 4, 5, 6, 7, 8};
-    int size = 8;
-    int sortedArray[] = {1, 2, 3, 4, 5, 6, 7, 8};
-
-    DynamicArray<int> dynamicArray(array, size);
-
-    QuickSort(&dynamicArray);
-
-    for (int i = 0; i < size; i++) {
-        assert(dynamicArray.GetElement(i) == sortedArray[i]);
-    }
-}
-
-void QuickSortTest3() {
-    int array[] = {1, 2, 3, 5, 4, 6, 7, 8};
-    int size = 8;
-    int sortedArray[] = {1, 2, 3, 4, 5, 6, 7, 8};
-
-    DynamicArray<int> dynamicArray(array, size);
-
-    QuickSort(&dynamicArray);
-
-    for (int i = 0; i < size; i++) {
-        assert(dynamicArray.GetElement(i) == sortedArray[i]);
-    }
-}
-
-void QuickSortTest4() {
-    int array[] = {1};
-    int size = 1;
-    int sortedArray[] = {1};
-
-    DynamicArray<int> dynamicArray(array, size);
-
-    QuickSort(&dynamicArray);
-
-    for (int i = 0; i < size; i++) {
-        assert(dynamicArray.GetElement(i) == sortedArray[i]);
-    }
-}
-
-void QuickSortTest5() {
-    int array[] = {8, 7, 6, 5, 4, 3, 2, 1};
-    int size = 8;
-    int sortedArray[] = {1, 2, 3, 4, 5, 6, 7, 8};
-
-    DynamicArray<int> dynamicArray(array, size);
-
-    QuickSort(&dynamicArray);
-
-    for (int i = 0; i < size; i++) {
-        assert(dynamicArray.GetElement(i) == sortedArray[i]);
-    }
-}
-
-void QuickSortTest6() {
-    int size = 10000;
-    DynamicArray<int> dynamicArray(0);
-
-    for (int i = 0; i < size; i++) {
-        dynamicArray.Append(rand());
-    }
-
-    QuickSort(&dynamicArray);
-
-    for (int i = 0; i < size - 1; i++) {
-        assert(dynamicArray.GetElement(i) <= dynamicArray.GetElement(i + 1));
-    }
-}
-
-
-
-void MergeSortTest1() {
-    int array[] = {5, 3, 1, 8, 9, 2, 34, -7};
-    int size = 8;
-    int sortedArray[] = {-7, 1, 2, 3, 5, 8, 9, 34};
-
-    DynamicArray<int> dynamicArray(array, size);
-
-    MergeSort(&dynamicArray);
-
-    for (int i = 0; i < size; i++) {
-        assert(dynamicArray.GetElement(i) == sortedArray[i]);
-    }
-}
 void RunAllTests() {
     std::cout << "Running Constructor Tests...\n";
     ConstructorTests();
@@ -506,15 +466,8 @@ void RunAllTests() {
     LinkedInsertAtTest();
     std::cout << "Running Linked Union Tests...\n";
     LinkedUnionTest();
-    std::cout << "Running Quick Sort Tests...\n";
-    QuickSortTest1();
-    QuickSortTest2();
-    QuickSortTest3();
-    QuickSortTest4();
-    QuickSortTest5();
-    QuickSortTest6();
-    std::cout << "Running Merge Sort Tests...\n";
-    MergeSortTest1();
+    std::cout << "Running Sorting Tests...\n";
+    SortingTests();
     std::cout << "All tests completed!\n";
 }
 
