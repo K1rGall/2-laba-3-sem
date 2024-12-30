@@ -315,7 +315,7 @@ private:
         std::vector<double> yQuickSort;
         std::vector<double> yMergeSort;
 
-        for (int i = step; i <= max; i += step)
+        for (int i = 0; i <= max; i += step)
         {
             DynamicArray<People> peoples(i);
 

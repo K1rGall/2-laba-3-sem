@@ -24,36 +24,31 @@ private:
 
     // Генерация случайной даты рождения
     std::string GenerateRandomBirthDate() {
-        // Установка диапазона для дат
-        auto start = std::chrono::system_clock::from_time_t(std::mktime(new tm{0, 0, 0, 1, 0, 60})); // 1960-01-01
-        auto end = std::chrono::system_clock::from_time_t(std::mktime(new tm{0, 0, 0, 1, 0, 120})); // 2020-01-01
+        std::uniform_int_distribution<int> yearDist(1960, 2020);
+        std::uniform_int_distribution<int> monthDist(1, 12);
+        std::uniform_int_distribution<int> dayDist(1, 28);
 
-        // Генерация случайного времени
-        std::uniform_int_distribution<std::chrono::system_clock::rep> dist(
-                start.time_since_epoch().count(),
-                end.time_since_epoch().count()
-        );
+        int year = yearDist(gen);
+        int month = monthDist(gen);
+        int day = dayDist(gen);
 
-        auto random_time = std::chrono::system_clock::time_point(std::chrono::system_clock::duration(dist(gen)));
-        std::time_t random_time_t = std::chrono::system_clock::to_time_t(random_time);
-
-        // Форматирование даты
         std::ostringstream oss;
-        oss << std::put_time(std::localtime(&random_time_t), "%d.%m.%Y");
+        oss << std::setw(2) << std::setfill('0') << day << '.'
+            << std::setw(2) << std::setfill('0') << month << '.' << year;
         return oss.str();
     }
 
     // Генерация случайной зарплаты
     int GenerateRandomSalary() {
-        std::uniform_int_distribution<> dist(0, 1000000); // Диапазон от 0 до 1,000,000
-        return dist(gen);
+        static std::uniform_int_distribution<> salaryDist(0, 1000000); // Диапазон от 0 до 1,000,000
+        return salaryDist(gen);
     }
 
 public:
     People() {
-        std::uniform_int_distribution<> firstNameDist(0, countRussianFirstNames - 1);
-        std::uniform_int_distribution<> surnameDist(0, countRussiansurnames - 1);
-        std::uniform_int_distribution<> patronymicDist(0, countRussianPatronymics - 1);
+        static std::uniform_int_distribution<> firstNameDist(0, countRussianFirstNames - 1);
+        static std::uniform_int_distribution<> surnameDist(0, countRussiansurnames - 1);
+        static std::uniform_int_distribution<> patronymicDist(0, countRussianPatronymics - 1);
 
         firstName = russianFirstNames[firstNameDist(gen)];
         surname = russiansurnames[surnameDist(gen)];
@@ -83,21 +78,25 @@ public:
 
     // Статическая функция для массовой генерации данных
     static void GenerateMultiplePeople(std::vector<People>& people, int count) {
-        std::vector<std::thread> threads;
-        int batch_size = count / std::thread::hardware_concurrency();
+        people.resize(count);
+        int thread_count = std::thread::hardware_concurrency();
+        int batch_size = (count + thread_count - 1) / thread_count;
 
-        // Разделяем задачу по потокам для ускорения генерации
-        for (int i = 0; i < std::thread::hardware_concurrency(); ++i) {
-            threads.push_back(std::thread([&people, batch_size, i]() {
-                for (int j = i * batch_size; j < (i + 1) * batch_size && j < people.size(); ++j) {
+        std::vector<std::thread> threads;
+
+        for (int i = 0; i < thread_count; ++i) {
+            threads.emplace_back([&people, i, batch_size, count]() {
+                int start = i * batch_size;
+                int end = std::min(start + batch_size, count);
+                for (int j = start; j < end; ++j) {
                     people[j] = People(); // Генерация нового объекта
                 }
-            }));
+            });
         }
 
         // Ожидаем завершения всех потоков
         for (auto& t : threads) {
-            t.join();
+            if (t.joinable()) t.join();
         }
     }
 };
