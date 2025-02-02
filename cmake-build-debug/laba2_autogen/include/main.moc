@@ -35,10 +35,10 @@ namespace {
 struct qt_meta_stringdata_CLASSMainWindowENDCLASS_t {};
 constexpr auto qt_meta_stringdata_CLASSMainWindowENDCLASS = QtMocHelpers::stringData(
     "MainWindow",
-    "plotQuickSortGraph",
+    "PlotQuickSortGraph",
     "",
-    "plotMergeSortGraph",
-    "plotComparisonGraph"
+    "PlotMergeSortGraph",
+    "PlotComparisonGraph"
 );
 #else  // !QT_MOC_HAS_STRINGDATA
 #error "qtmochelpers.h not found or too old."
@@ -80,11 +80,11 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
     qt_incomplete_metaTypeArray<qt_meta_stringdata_CLASSMainWindowENDCLASS_t,
         // Q_OBJECT / Q_GADGET
         QtPrivate::TypeAndForceComplete<MainWindow, std::true_type>,
-        // method 'plotQuickSortGraph'
+        // method 'PlotQuickSortGraph'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        // method 'plotMergeSortGraph'
+        // method 'PlotMergeSortGraph'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        // method 'plotComparisonGraph'
+        // method 'PlotComparisonGraph'
         QtPrivate::TypeAndForceComplete<void, std::false_type>
     >,
     nullptr
@@ -96,9 +96,9 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         auto *_t = static_cast<MainWindow *>(_o);
         (void)_t;
         switch (_id) {
-        case 0: _t->plotQuickSortGraph(); break;
-        case 1: _t->plotMergeSortGraph(); break;
-        case 2: _t->plotComparisonGraph(); break;
+        case 0: _t->PlotQuickSortGraph(); break;
+        case 1: _t->PlotMergeSortGraph(); break;
+        case 2: _t->PlotComparisonGraph(); break;
         default: ;
         }
     }

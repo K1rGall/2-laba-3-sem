@@ -17,173 +17,196 @@
 #include "testing/testing.h"
 #include <thread>
 #include <random>
-
 #include <algorithm>
+#include "testing/sorters.h"
+
 
 QT_USE_NAMESPACE
 
-// Функция для генерации случайного файла
 using namespace std;
+
+void SortLargeFile() {
+    std::string inputFile, outputFile;
+    std::cout << "Enter input file name: ";
+    std::cin >> inputFile;
+    std::cout << "Enter output file name: ";
+    std::cin >> outputFile;
+
+    int chunkSize;
+    std::cout << "Enter max chunk size (number of records per chunk): ";
+    std::cin >> chunkSize;
+
+    std::cout << "Sorting large file...\n";
+    ExternalSort(inputFile, outputFile, chunkSize);
+    std::cout << "Sorting completed. Sorted data saved to " << outputFile << std::endl;
+}
+
+// Функция для генерации случайного файла
 template<typename T>
-void TryWriteToFile(string fileNameOut, string declineWord, DynamicArray<T>* array)
+void TryWriteToFile(string FileNameOut, string DeclineWord, DynamicArray<T>* Array)
 {
-    if (fileNameOut != declineWord)
+    if (FileNameOut != DeclineWord)
     {
-        std::cout << "Writing data to the file " << fileNameOut << std::endl;
-        WriteSequenceToFile(fileNameOut, array);
+        std::cout << "Writing data to the file " << FileNameOut << std::endl;
+        WriteSequenceToFile(FileNameOut, Array);
     }
 }
-void generateRandomFile() {
-    std::string fileName;
+
+void GenerateRandomFile() {
+    std::string FileName;
     std::cout << "Enter file name to save random data: ";
-    std::cin >> fileName;
+    std::cin >> FileName;
 
-    int countNumbers;
+    int CountNumbers;
     std::cout << "Enter the number of entries: ";
-    std::cin >> countNumbers;
+    std::cin >> CountNumbers;
 
-    GenerateRandomFile(countNumbers, fileName);
+    GenerateRandomFile(CountNumbers, FileName);
     std::cout << "Random file generated successfully.\n";
 }
-void generateRandomData(DynamicArray<People>& peoples, int startIndex, int endIndex) {
-    for (int i = startIndex; i < endIndex; i++) {
-        peoples[i] = People();
+
+void GenerateRandomData(DynamicArray<People>& Peoples, int StartIndex, int EndIndex) {
+    for (int i = StartIndex; i < EndIndex; i++) {
+        Peoples[i] = People();
     }
 }
+
 // Функция для сортировки с использованием QuickSort
-void sortQuickSort() {
-    string fileNameIn;
-    string fileNameOut;
-    string declineWord = "no";
-    DynamicArray<People> array;
-    double duration = 0;
+void SortQuickSort() {
+    std::string FileNameIn;
+    std::string FileNameOut;
+    std::string DeclineWord = "no";
+    DynamicArray<People> Array;
 
-    cout << "Write file name to sort\n";
-    cin >> fileNameIn;
+    std::cout << "Write file name to sort\n";
+    std::cin >> FileNameIn;
 
-    cout << "Write file name to save the result (type no to don't save the result)\n";
-    cin >> fileNameOut;
+    std::cout << "Write file name to save the result (type no to don't save the result)\n";
+    std::cin >> FileNameOut;
 
-    std::cout << "Read data from the file " << fileNameIn << std::endl;
-    ReadDynamicArrayFromFile(fileNameIn, &array);
+    std::cout << "Read data from the file " << FileNameIn << std::endl;
+    ReadDynamicArrayFromFile(FileNameIn, &Array);
 
-    std::cout << "Starting sorting..." << std::endl;
-    SortSequenceByQuickSort(&array, &duration);
+    std::cout << "Starting sorting using QuickSort..." << std::endl;
 
-    cout << "Sorting spend " << duration << " seconds\n";
+    QuickSort<People> quickSorter;
+    quickSorter.Sort(&Array);
 
-    TryWriteToFile(fileNameOut, declineWord, &array);
+    std::cout << "Sorting completed." << std::endl;
+
+    TryWriteToFile(FileNameOut, DeclineWord, &Array);
 }
 
-// Функция для сортировки с использованием MergeSort
-void sortMergeSort() {
-    string fileNameIn;
-    string fileNameOut;
-    string declineWord = "no";
-    DynamicArray<People> array;
-    double duration = 0;
+void SortMergeSort() {
+    std::string FileNameIn;
+    std::string FileNameOut;
+    std::string DeclineWord = "no";
+    DynamicArray<People> Array;
 
-    cout << "Write file name to sort\n";
-    cin >> fileNameIn;
+    std::cout << "Write file name to sort\n";
+    std::cin >> FileNameIn;
 
-    cout << "Write file name to save the result (type no to don't save the result)\n";
-    cin >> fileNameOut;
+    std::cout << "Write file name to save the result (type no to don't save the result)\n";
+    std::cin >> FileNameOut;
 
-    std::cout << "Read data from the file " << fileNameIn << std::endl;
-    ReadDynamicArrayFromFile(fileNameIn, &array);
+    std::cout << "Read data from the file " << FileNameIn << std::endl;
+    ReadDynamicArrayFromFile(FileNameIn, &Array);
 
-    std::cout << "Starting sorting..." << std::endl;
-    SortSequenceByMergeSort(&array, &duration);
+    std::cout << "Starting sorting using MergeSort..." << std::endl;
 
-    cout << "Sorting spend " << duration << " seconds\n";
+    MergeSort<People> mergeSorter;
+    mergeSorter.Sort(&Array);
 
-    TryWriteToFile(fileNameOut, declineWord, &array);
+    std::cout << "Sorting completed." << std::endl;
+
+    TryWriteToFile(FileNameOut, DeclineWord, &Array);
 }
+
 // Функция для построения графика
-void PlotQuickSortGraph(std::vector<double>& x, std::vector<double>& y, QChartView* chartView) {
-    QLineSeries *series = new QLineSeries();
-    for (size_t i = 0; i < x.size(); i += 1) {  // Ограничиваем количество точек для улучшения производительности
-        series->append(x[i], y[i]);
+void PlotQuickSortGraph(std::vector<double>& X, std::vector<double>& Y, QChartView* ChartView) {
+    QLineSeries *Series = new QLineSeries();
+    for (size_t i = 0; i < X.size(); i++) {
+        Series->append(X[i], Y[i]);
     }
 
-    QChart *chart = new QChart();
-    chart->addSeries(series);
-    chart->setTitle("QuickSort Performance");
-    chart->createDefaultAxes();
+    QChart *Chart = new QChart();
+    Chart->addSeries(Series);
+    Chart->setTitle("QuickSort Performance");
+    Chart->createDefaultAxes();
 
     // Настроим оси
-    QValueAxis *axisX = new QValueAxis();
-    axisX->setTitleText("Number of Elements");
-    axisX->setLabelFormat("%d");
-    chart->setAxisX(axisX, series);
+    QValueAxis *AxisX = new QValueAxis();
+    AxisX->setTitleText("Number of Elements");
+    AxisX->setLabelFormat("%d");
+    Chart->setAxisX(AxisX, Series);
 
-    QValueAxis *axisY = new QValueAxis();
-    axisY->setTitleText("Duration (seconds)");
-    axisY->setLabelFormat("%.5f");
-    chart->setAxisY(axisY, series);
+    QValueAxis *AxisY = new QValueAxis();
+    AxisY->setTitleText("Duration (seconds)");
+    AxisY->setLabelFormat("%.5f");
+    Chart->setAxisY(AxisY, Series);
 
-    chartView->setChart(chart);
-    chartView->setRenderHint(QPainter::Antialiasing);
+    ChartView->setChart(Chart);
+    ChartView->setRenderHint(QPainter::Antialiasing);
 }
 
-void PlotMergeSortGraph(std::vector<double>& x, std::vector<double>& y, QChartView* chartView) {
-    QLineSeries *series = new QLineSeries();
-    for (size_t i = 0; i < x.size(); i += 1) {  // Ограничиваем количество точек для улучшения производительности
-        series->append(x[i], y[i]);
+void PlotMergeSortGraph(std::vector<double>& X, std::vector<double>& Y, QChartView* ChartView) {
+    QLineSeries *Series = new QLineSeries();
+    for (size_t i = 0; i < X.size(); i++) {
+        Series->append(X[i], Y[i]);
     }
 
-    QChart *chart = new QChart();
-    chart->addSeries(series);
-    chart->setTitle("MergeSort Performance");
-    chart->createDefaultAxes();
+    QChart *Chart = new QChart();
+    Chart->addSeries(Series);
+    Chart->setTitle("MergeSort Performance");
+    Chart->createDefaultAxes();
 
     // Настроим оси
-    QValueAxis *axisX = new QValueAxis();
-    axisX->setTitleText("Number of Elements");
-    axisX->setLabelFormat("%d");
-    chart->setAxisX(axisX, series);
+    QValueAxis *AxisX = new QValueAxis();
+    AxisX->setTitleText("Number of Elements");
+    AxisX->setLabelFormat("%d");
+    Chart->setAxisX(AxisX, Series);
 
-    QValueAxis *axisY = new QValueAxis();
-    axisY->setTitleText("Duration (seconds)");
-    axisY->setLabelFormat("%.5f");
-    chart->setAxisY(axisY, series);
+    QValueAxis *AxisY = new QValueAxis();
+    AxisY->setTitleText("Duration (seconds)");
+    AxisY->setLabelFormat("%.5f");
+    Chart->setAxisY(AxisY, Series);
 
-    chartView->setChart(chart);
-    chartView->setRenderHint(QPainter::Antialiasing);
+    ChartView->setChart(Chart);
+    ChartView->setRenderHint(QPainter::Antialiasing);
 }
 
 // Функция для построения графика для сравнения сортировок
-void PlotComparisonGraph(std::vector<double>& x, std::vector<double>& yQuickSort, std::vector<double>& yMergeSort, QChartView* chartView) {
-    QLineSeries *seriesQuickSort = new QLineSeries();
-    QLineSeries *seriesMergeSort = new QLineSeries();
+void PlotComparisonGraph(std::vector<double>& X, std::vector<double>& YQuickSort, std::vector<double>& YMergeSort, QChartView* ChartView) {
+    QLineSeries *SeriesQuickSort = new QLineSeries();
+    QLineSeries *SeriesMergeSort = new QLineSeries();
 
-    for (size_t i = 0; i < x.size(); i += 1) {  // Ограничиваем количество точек для улучшения производительности
-        seriesQuickSort->append(x[i], yQuickSort[i]);
-        seriesMergeSort->append(x[i], yMergeSort[i]);
+    for (size_t i = 0; i < X.size(); i++) {
+        SeriesQuickSort->append(X[i], YQuickSort[i]);
+        SeriesMergeSort->append(X[i], YMergeSort[i]);
     }
 
-    QChart *chart = new QChart();
-    chart->addSeries(seriesQuickSort);
-    chart->addSeries(seriesMergeSort);
+    QChart *Chart = new QChart();
+    Chart->addSeries(SeriesQuickSort);
+    Chart->addSeries(SeriesMergeSort);
 
-    chart->setTitle("Sorting Performance Comparison (QuickSort vs MergeSort)");
-    chart->createDefaultAxes();
+    Chart->setTitle("Sorting Performance Comparison (QuickSort vs MergeSort)");
+    Chart->createDefaultAxes();
 
     // Настроим оси
-    QValueAxis *axisX = new QValueAxis();
-    axisX->setTitleText("Number of Elements");
-    axisX->setLabelFormat("%d");
-    chart->setAxisX(axisX, seriesQuickSort);
-    chart->setAxisX(axisX, seriesMergeSort);
+    QValueAxis *AxisX = new QValueAxis();
+    AxisX->setTitleText("Number of Elements");
+    AxisX->setLabelFormat("%d");
+    Chart->setAxisX(AxisX, SeriesQuickSort);
+    Chart->setAxisX(AxisX, SeriesMergeSort);
 
-    QValueAxis *axisY = new QValueAxis();
-    axisY->setTitleText("Duration (seconds)");
-    axisY->setLabelFormat("%.5f");
-    chart->setAxisY(axisY, seriesQuickSort);
-    chart->setAxisY(axisY, seriesMergeSort);
+    QValueAxis *AxisY = new QValueAxis();
+    AxisY->setTitleText("Duration (seconds)");
+    AxisY->setLabelFormat("%.5f");
+    Chart->setAxisY(AxisY, SeriesQuickSort);
+    Chart->setAxisY(AxisY, SeriesMergeSort);
 
-    chartView->setChart(chart);
-    chartView->setRenderHint(QPainter::Antialiasing);
+    ChartView->setChart(Chart);
+    ChartView->setRenderHint(QPainter::Antialiasing);
 }
 
 // Главный класс для окна программы
@@ -196,153 +219,137 @@ public:
     {
         setWindowTitle("Sorting Application");
 
-        QVBoxLayout *layout = new QVBoxLayout(this);
+        QVBoxLayout *Layout = new QVBoxLayout(this);
 
         // Кнопки для взаимодействия с пользователем
-        QPushButton *btnQuickSortGraph = new QPushButton("QuickSort Graph", this);
-        QPushButton *btnMergeSortGraph = new QPushButton("MergeSort Graph", this);
-        QPushButton *btnCompareSorts = new QPushButton("Compare QuickSort vs MergeSort", this);
+        QPushButton *BtnQuickSortGraph = new QPushButton("QuickSort Graph", this);
+        QPushButton *BtnMergeSortGraph = new QPushButton("MergeSort Graph", this);
+        QPushButton *BtnCompareSorts = new QPushButton("Compare QuickSort vs MergeSort", this);
 
-        layout->addWidget(btnQuickSortGraph);
-        layout->addWidget(btnMergeSortGraph);
-        layout->addWidget(btnCompareSorts);
+        Layout->addWidget(BtnQuickSortGraph);
+        Layout->addWidget(BtnMergeSortGraph);
+        Layout->addWidget(BtnCompareSorts);
 
         // Контейнер для отображения графиков
-        chartView = new QChartView(this);
-        layout->addWidget(chartView);
+        ChartView = new QChartView(this);
+        Layout->addWidget(ChartView);
 
-        connect(btnQuickSortGraph, &QPushButton::clicked, this, &MainWindow::plotQuickSortGraph);
-        connect(btnMergeSortGraph, &QPushButton::clicked, this, &MainWindow::plotMergeSortGraph);
-        connect(btnCompareSorts, &QPushButton::clicked, this, &MainWindow::plotComparisonGraph);
+        connect(BtnQuickSortGraph, &QPushButton::clicked, this, &MainWindow::PlotQuickSortGraph);
+        connect(BtnMergeSortGraph, &QPushButton::clicked, this, &MainWindow::PlotMergeSortGraph);
+        connect(BtnCompareSorts, &QPushButton::clicked, this, &MainWindow::PlotComparisonGraph);
 
-        setLayout(layout);
+        setLayout(Layout);
         resize(800, 600);
     }
 
 private slots:
-    void plotQuickSortGraph()
+    void PlotQuickSortGraph()
     {
-        plotGraph("QuickSort");
+        PlotGraph("QuickSort");
     }
 
-    void plotMergeSortGraph()
+    void PlotMergeSortGraph()
     {
-        plotGraph("MergeSort");
+        PlotGraph("MergeSort");
     }
 
-    void plotComparisonGraph()
+    void PlotComparisonGraph()
     {
-        compareSortingGraphs();
+        CompareSortingGraphs();
     }
 
 private:
-    void plotGraph(const QString& sortingMethod)
+    void PlotGraph(const QString& SortingMethod)
     {
-        const int max = 1000000;  // 100000 элементов
-        const int step = 200000;   // Шаг для увеличения количества элементов
-        std::vector<double> x;
-        std::vector<double> yQuickSort;
-        std::vector<double> yMergeSort;
+        const int Max = 1000000;  // 1000000 элементов
+        const int Step = 200000;   // Шаг для увеличения количества элементов
+        std::vector<double> X;
+        std::vector<double> YQuickSort;
+        std::vector<double> YMergeSort;
 
-        for (int i = step; i <= max; i += step)
+        for (int i = Step; i <= Max; i += Step)
         {
-            DynamicArray<People> peoples(i);
+            DynamicArray<People> Peoples(i);
 
             // Использование нескольких потоков для генерации данных
-            int half = i / 2;
-            std::thread t1(generateRandomData, std::ref(peoples), 0, half);
-            std::thread t2(generateRandomData, std::ref(peoples), half, i);
+            int Half = i / 2;
+            std::thread T1(GenerateRandomData, std::ref(Peoples), 0, Half);
+            std::thread T2(GenerateRandomData, std::ref(Peoples), Half, i);
 
             // Ожидание завершения потоков
-            t1.join();
-            t2.join();
+            T1.join();
+            T2.join();
 
-            double durationQuickSort;
-            double durationMergeSort;
+            // Создание объектов сортировщиков
+            QuickSort<People> quickSorter;
+            MergeSort<People> mergeSorter;
 
             // Сортировка QuickSort
-            SortSequenceByQuickSort(&peoples, &durationQuickSort);
-            x.push_back(i);
-            yQuickSort.push_back(durationQuickSort);
+            auto startQuick = std::chrono::high_resolution_clock::now();
+            quickSorter.Sort(&Peoples);
+            auto endQuick = std::chrono::high_resolution_clock::now();
+            double DurationQuickSort = std::chrono::duration<double>(endQuick - startQuick).count();
+
+            X.push_back(i);
+            YQuickSort.push_back(DurationQuickSort);
 
             // Сортировка MergeSort
-            SortSequenceByMergeSort(&peoples, &durationMergeSort);
-            yMergeSort.push_back(durationMergeSort);
+            auto startMerge = std::chrono::high_resolution_clock::now();
+            mergeSorter.Sort(&Peoples);
+            auto endMerge = std::chrono::high_resolution_clock::now();
+            double DurationMergeSort = std::chrono::duration<double>(endMerge - startMerge).count();
+
+            YMergeSort.push_back(DurationMergeSort);
         }
 
-        PlotComparisonGraph(x, yQuickSort, yMergeSort, chartView);
+        ::PlotComparisonGraph(X, YQuickSort, YMergeSort, ChartView);
     }
 
-    void PlotComparisonGraph(std::vector<double>& x, std::vector<double>& yQuickSort, std::vector<double>& yMergeSort, QChartView* chartView) {
-        QLineSeries *seriesQuickSort = new QLineSeries();
-        QLineSeries *seriesMergeSort = new QLineSeries();
-
-        for (size_t i = 0; i < x.size(); i++) {
-            seriesQuickSort->append(x[i], yQuickSort[i]);
-            seriesMergeSort->append(x[i], yMergeSort[i]);
-        }
-
-        QChart *chart = new QChart();
-        chart->addSeries(seriesQuickSort);
-        chart->addSeries(seriesMergeSort);
-
-        chart->setTitle("Sorting Performance Comparison (QuickSort vs MergeSort)");
-        chart->createDefaultAxes();
-
-        // Настроим оси
-        QValueAxis *axisX = new QValueAxis();
-        axisX->setTitleText("Number of Elements");
-        axisX->setLabelFormat("%d");
-        chart->setAxisX(axisX, seriesQuickSort);
-        chart->setAxisX(axisX, seriesMergeSort);
-
-        QValueAxis *axisY = new QValueAxis();
-        axisY->setTitleText("Duration (seconds)");
-        axisY->setLabelFormat("%.5f");
-        chart->setAxisY(axisY, seriesQuickSort);
-        chart->setAxisY(axisY, seriesMergeSort);
-
-        chartView->setChart(chart);
-        chartView->setRenderHint(QPainter::Antialiasing);
-    }
-
-
-    void compareSortingGraphs()
+    void CompareSortingGraphs()
     {
-        const int max = 1000000;  // Maximum number of elements for testing
-        const int step = 200000;   // Step size for increasing number of elements
-        std::vector<double> x;
-        std::vector<double> yQuickSort;
-        std::vector<double> yMergeSort;
+        const int Max = 1000000;  // Maximum number of elements for testing
+        const int Step = 200000;   // Step size for increasing number of elements
+        std::vector<double> X;
+        std::vector<double> YQuickSort;
+        std::vector<double> YMergeSort;
 
-        for (int i = 0; i <= max; i += step)
+        for (int i = 0; i <= Max; i += Step)
         {
-            DynamicArray<People> peoples(i);
+            DynamicArray<People> Peoples(i);
 
-            // Fill the array with random data once
+            // Заполнение массива случайными данными
             for (int j = 0; j < i; j++) {
-                peoples[j] = People(); // Randomly populate the array
+                Peoples[j] = People(); // Заполняем массив случайными значениями
             }
 
-            double durationQuickSort;
-            double durationMergeSort;
+            // Создаем объекты сортировщиков
+            QuickSort<People> quickSorter;
+            MergeSort<People> mergeSorter;
 
-            // QuickSort
-            SortSequenceByQuickSort(&peoples, &durationQuickSort);
+            // Измерение времени для QuickSort
+            auto startQuick = std::chrono::high_resolution_clock::now();
+            quickSorter.Sort(&Peoples);
+            auto endQuick = std::chrono::high_resolution_clock::now();
+            double DurationQuickSort = std::chrono::duration<double>(endQuick - startQuick).count();
 
-            // MergeSort
-            SortSequenceByMergeSort(&peoples, &durationMergeSort);
+            // Измерение времени для MergeSort
+            auto startMerge = std::chrono::high_resolution_clock::now();
+            mergeSorter.Sort(&Peoples);
+            auto endMerge = std::chrono::high_resolution_clock::now();
+            double DurationMergeSort = std::chrono::duration<double>(endMerge - startMerge).count();
 
-            x.push_back(i);
-            yQuickSort.push_back(durationQuickSort);
-            yMergeSort.push_back(durationMergeSort);
+            // Запись данных для построения графиков
+            X.push_back(i);
+            YQuickSort.push_back(DurationQuickSort);
+            YMergeSort.push_back(DurationMergeSort);
         }
 
-        // Plot comparison graph for both QuickSort and MergeSort
-        PlotComparisonGraph(x, yQuickSort, yMergeSort, chartView);
+        // Построение графика для сравнения двух сортировок
+        ::PlotComparisonGraph(X, YQuickSort, YMergeSort, ChartView);
     }
+
 private:
-    QChartView *chartView;
+    QChartView *ChartView;
 };
 
 int main(int argc, char *argv[])
@@ -351,6 +358,7 @@ int main(int argc, char *argv[])
     while (true)
     {
         std::cout << "\nSorting Application Menu:\n";
+        std::cout << "0. Sort a large file\n";
         std::cout << "1. Perform QuickSort\n";
         std::cout << "2. Perform MergeSort\n";
         std::cout << "3. Compare QuickSort and MergeSort\n";
@@ -369,7 +377,7 @@ int main(int argc, char *argv[])
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         }
 
-        if (choice < 1 || choice > 9) {
+        if (choice < 0 || choice > 9) {
             std::cout << "Invalid choice. Please try again.\n";
             continue;
         }
@@ -393,30 +401,74 @@ int main(int argc, char *argv[])
 
         switch (choice)
         {
+            case 0:
+                SortLargeFile();
+                break;
             case 1: {
                 std::cout << "Performing QuickSort...\n";
-                SortSequenceByQuickSort(&array, &durationQuickSort);
+
+                // Создаем объект сортировщика
+                QuickSort<People> quickSorter;
+
+                // Измеряем время выполнения
+                auto startQuick = std::chrono::high_resolution_clock::now();
+                quickSorter.Sort(&array);
+                auto endQuick = std::chrono::high_resolution_clock::now();
+
+                double durationQuickSort = std::chrono::duration<double>(endQuick - startQuick).count();
+
                 std::cout << "QuickSort completed in " << durationQuickSort << " seconds.\n";
                 break;
             }
+
             case 2: {
                 std::cout << "Performing MergeSort...\n";
-                SortSequenceByMergeSort(&array, &durationMergeSort);
+
+                // Создаем объект сортировщика
+                MergeSort<People> mergeSorter;
+
+                // Измеряем время выполнения
+                auto startMerge = std::chrono::high_resolution_clock::now();
+                mergeSorter.Sort(&array);
+                auto endMerge = std::chrono::high_resolution_clock::now();
+
+                double durationMergeSort = std::chrono::duration<double>(endMerge - startMerge).count();
+
                 std::cout << "MergeSort completed in " << durationMergeSort << " seconds.\n";
                 break;
             }
             case 3: {
                 std::cout << "Performing QuickSort...\n";
-                SortSequenceByQuickSort(&array, &durationQuickSort);
+
+                // Создаем объект сортировщика QuickSort
+                QuickSort<People> quickSorter;
+
+                // Измеряем время выполнения QuickSort
+                auto startQuick = std::chrono::high_resolution_clock::now();
+                quickSorter.Sort(&array);
+                auto endQuick = std::chrono::high_resolution_clock::now();
+
+                double durationQuickSort = std::chrono::duration<double>(endQuick - startQuick).count();
+
                 std::cout << "QuickSort completed in " << durationQuickSort << " seconds.\n";
 
-                // Перезаполняем массив случайными значениями для MergeSort
+                // Перезаполняем массив случайными значениями перед MergeSort
                 for (int i = 0; i < numElements; i++) {
                     array[i] = People();
                 }
 
                 std::cout << "Performing MergeSort...\n";
-                SortSequenceByMergeSort(&array, &durationMergeSort);
+
+                // Создаем объект сортировщика MergeSort
+                MergeSort<People> mergeSorter;
+
+                // Измеряем время выполнения MergeSort
+                auto startMerge = std::chrono::high_resolution_clock::now();
+                mergeSorter.Sort(&array);
+                auto endMerge = std::chrono::high_resolution_clock::now();
+
+                double durationMergeSort = std::chrono::duration<double>(endMerge - startMerge).count();
+
                 std::cout << "MergeSort completed in " << durationMergeSort << " seconds.\n";
 
                 std::cout << "\nComparison:\n";
@@ -425,36 +477,29 @@ int main(int argc, char *argv[])
                 break;
             }
             case 4: {
-                std::cout << "Launching graphical interface...\n";
                 QApplication a(argc, argv);
                 MainWindow w;
                 w.show();
-                return a.exec();
-            }
-            case 5: {
-                generateRandomFile();
+                a.exec();
                 break;
             }
-            case 6: {
-                sortQuickSort();
+            case 5:
+                GenerateRandomFile();
                 break;
-            }
-            case 7: {
-                sortMergeSort();
+            case 6:
+                SortQuickSort();
                 break;
-            }
-            case 8: {
-                std::cout << "Running all tests...\n";
-                RunAllTests();  // Вызов всех тестов
+            case 7:
+                SortMergeSort();
                 break;
-            }
-            case 9: {
-                std::cout << "Exiting the application. Goodbye!\n";
+            case 8:
+                RunAllTests();
+                break;
+            case 9:
                 return 0;
-            }
         }
     }
+
+    return 0;
 }
-
-
 #include "main.moc"

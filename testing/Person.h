@@ -8,9 +8,10 @@
 #include <chrono>
 #include <thread>
 #include <vector>
+#include <iostream>
 #include "Personnames.h"
 
-// Глобальный генератор случайных чисел для всех нужд
+// Глобальный генератор случайных чисел
 static std::random_device rd;
 static std::mt19937 gen(rd());
 
@@ -40,7 +41,7 @@ private:
 
     // Генерация случайной зарплаты
     int GenerateRandomSalary() {
-        static std::uniform_int_distribution<> salaryDist(0, 1000000); // Диапазон от 0 до 1,000,000
+        static std::uniform_int_distribution<> salaryDist(0, 1000000);
         return salaryDist(gen);
     }
 
@@ -61,20 +62,46 @@ public:
             : firstName(std::move(firstName)), surname(std::move(surname)), patronymic(std::move(patronymic)),
               birthDate(std::move(birthDate)), salary(salary) {}
 
-    // Операторы сравнения
-    bool operator<(const People& other) const { return salary < other.salary; }
-    bool operator>(const People& other) const { return salary > other.salary; }
-    bool operator<=(const People& other) const { return salary <= other.salary; }
-    bool operator>=(const People& other) const { return salary >= other.salary; }
-    bool operator==(const People& other) const { return salary == other.salary; }
-    bool operator!=(const People& other) const { return salary != other.salary; }
+    // Операторы сравнения (по фамилии и зарплате)
+    bool operator<(const People& other) const {
+        return surname < other.surname || (surname == other.surname && salary < other.salary);
+    }
+
+    bool operator>(const People& other) const {
+        return surname > other.surname || (surname == other.surname && salary > other.salary);
+    }
+
+    bool operator<=(const People& other) const {
+        return !(*this > other);
+    }
+
+    bool operator>=(const People& other) const {
+        return !(*this < other);
+    }
+
+    bool operator==(const People& other) const {
+        return surname == other.surname && salary == other.salary;
+    }
+
+    bool operator!=(const People& other) const {
+        return !(*this == other);
+    }
+
 
     // Геттеры
     std::string GetFirstName() const { return firstName; }
     std::string GetSurname() const { return surname; }
     std::string GetPatronymic() const { return patronymic; }
     std::string GetBirthDate() const { return birthDate; }
-    double GetSalary() const { return salary; }
+    int GetSalary() const { return salary; }
+
+    friend std::istream &operator>>(std::istream &in, People &p) {
+        return in >> p.firstName >> p.surname >> p.birthDate >> p.salary;
+    }
+
+    friend std::ostream &operator<<(std::ostream &out, const People &p) {
+        return out << p.firstName << " " << p.surname << " " << p.birthDate << " " << p.salary;
+    }
 
     // Статическая функция для массовой генерации данных
     static void GenerateMultiplePeople(std::vector<People>& people, int count) {
@@ -89,16 +116,15 @@ public:
                 int start = i * batch_size;
                 int end = std::min(start + batch_size, count);
                 for (int j = start; j < end; ++j) {
-                    people[j] = People(); // Генерация нового объекта
+                    people[j] = People();
                 }
             });
         }
 
-        // Ожидаем завершения всех потоков
         for (auto& t : threads) {
             if (t.joinable()) t.join();
         }
     }
 };
 
-#endif
+#endif // PERSON_H

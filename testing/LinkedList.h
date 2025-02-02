@@ -49,7 +49,6 @@ public:
             {
                 current = current->next;
             }
-
             return *this;
         }
     };
@@ -77,7 +76,6 @@ public:
     LinkedList(LinkedList<T>& list) : head(nullptr), tail(nullptr), length(0)
     {
         Node* current = list.head;
-
         while (current != nullptr)
         {
             Append(current->data);
@@ -87,7 +85,7 @@ public:
 
     LinkedList(DynamicArray<T>& dynamicArray) : head(nullptr), tail(nullptr), length(0)
     {
-        for (int i = 1; i < dynamicArray.GetLength(); i++)
+        for (int i = 0; i < dynamicArray.GetLength(); i++)
         {
             Append(dynamicArray.GetElement(i));
         }
@@ -97,7 +95,6 @@ public:
     {
         Node* current = head;
         Node* next;
-
         while (current != nullptr)
         {
             next = current->next;
@@ -124,12 +121,10 @@ public:
     Node* GetNode(int index)
     {
         Node* current = head;
-
         for (int i = 0; i < index; i++)
         {
             current = current->next;
         }
-
         return current;
     }
 
@@ -140,15 +135,13 @@ public:
         b = temp;
     }
 
-    void Set(int index, T value)
+    void Set(int index, T value) override
     {
         Node* current = head;
-
         for (int i = 0; i < index; i++)
         {
             current = current->next;
         }
-
         current->data = value;
     }
 
@@ -168,7 +161,6 @@ public:
             {
                 sublist->Append(current->data);
             }
-
             current = current->next;
         }
 
@@ -183,7 +175,6 @@ public:
     void Append(T item) override
     {
         Node* newNode = new Node(item);
-
         if (length == 0)
         {
             head = tail = newNode;
@@ -193,25 +184,20 @@ public:
             tail->next = newNode;
             tail = newNode;
         }
-
         length++;
     }
 
     void Append(T* data, int dataSize) override
     {
-        int i = 0;
-
-        while (i < dataSize)
+        for (int i = 0; i < dataSize; i++)
         {
             Append(data[i]);
-            i++;
         }
     }
 
     void Prepend(T item) override
     {
         Node* newNode = new Node(item, head);
-
         if (length == 0)
         {
             head = tail = newNode;
@@ -220,7 +206,6 @@ public:
         {
             head = newNode;
         }
-
         length++;
     }
 
@@ -237,12 +222,10 @@ public:
         else
         {
             Node* current = head;
-
             for (int i = 0; i < index - 1; ++i)
             {
                 current = current->next;
             }
-
             Node* newNode = new Node(item, current->next);
             current->next = newNode;
             length++;
@@ -251,13 +234,50 @@ public:
 
     void Union(Sequence<T>* list) override
     {
-        int length = list->GetLength();
-
-        for (int i = 0; i < length; i++)
+        for (int i = 0; i < list->GetLength(); i++)
         {
             Append(list->GetElement(i));
         }
     }
+
+    // Добавленные реализации QuickSort и MergeSort
+    void QuickSort() override
+    {
+        std::vector<T> tempArray;
+        Node* current = head;
+        while (current != nullptr)
+        {
+            tempArray.push_back(current->data);
+            current = current->next;
+        }
+        std::sort(tempArray.begin(), tempArray.end());
+
+        current = head;
+        for (size_t i = 0; i < tempArray.size(); i++)
+        {
+            current->data = tempArray[i];
+            current = current->next;
+        }
+    }
+
+    void MergeSort() override
+    {
+        std::vector<T> tempArray;
+        Node* current = head;
+        while (current != nullptr)
+        {
+            tempArray.push_back(current->data);
+            current = current->next;
+        }
+        std::stable_sort(tempArray.begin(), tempArray.end());
+
+        current = head;
+        for (size_t i = 0; i < tempArray.size(); i++)
+        {
+            current->data = tempArray[i];
+            current = current->next;
+        }
+    }
 };
 
-#endif
+#endif // LINKED_LIST_H

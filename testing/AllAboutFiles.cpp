@@ -4,7 +4,118 @@
 #include <algorithm>
 #include "DynamicArray.h"
 #include "Person.h"
+#include <vector>
+#include <string>
+#include <queue>
+#include <functional>
 
+
+const std::string TEMP_FILE_PREFIX = "chunk_";
+
+std::vector<People> ReadChunk(std::ifstream &file, int chunkSize) {
+    std::vector<People> chunk;
+    std::string line;
+    while (chunk.size() < chunkSize && std::getline(file, line)) {
+        std::istringstream iss(line);
+        People person;
+        if (iss >> person) {
+            chunk.push_back(person);
+        }
+    }
+    return chunk;
+}
+
+void WriteChunk(const std::vector<People> &chunk, const std::string &filename) {
+    std::ofstream outFile(filename, std::ios::out | std::ios::trunc);
+    if (!outFile) {
+        std::cerr << "Error: Cannot open file for writing: " << filename << std::endl;
+        return;
+    }
+    for (const auto &person : chunk) {
+        outFile << person << "\n";
+    }
+}
+
+// Внешняя сортировка больших файлов
+void ExternalSort(const std::string &inputFile, const std::string &outputFile, int chunkSize) {
+    std::ifstream inFile(inputFile);
+    if (!inFile) {
+        std::cerr << "Error: Cannot open input file: " << inputFile << std::endl;
+        return;
+    }
+
+    std::vector<std::string> tempFiles;
+    int fileCount = 0;
+
+    while (true) {
+        std::vector<People> chunk = ReadChunk(inFile, chunkSize);
+        if (chunk.empty()) break;
+
+        std::sort(chunk.begin(), chunk.end(), [](const People &a, const People &b) {
+            return a.GetBirthDate() < b.GetBirthDate();
+        });
+
+        std::string tempFilename = TEMP_FILE_PREFIX + std::to_string(fileCount++) + ".txt";
+        WriteChunk(chunk, tempFilename);
+        tempFiles.push_back(tempFilename);
+    }
+    inFile.close();
+
+    auto compare = [](const std::pair<People, int> &a, const std::pair<People, int> &b) {
+        return a.first.GetBirthDate() > b.first.GetBirthDate();
+    };
+
+    std::priority_queue<std::pair<People, int>, std::vector<std::pair<People, int>>, decltype(compare)> minHeap(compare);
+
+    std::vector<std::ifstream> chunkStreams(tempFiles.size());
+    for (int i = 0; i < tempFiles.size(); ++i) {
+        chunkStreams[i].open(tempFiles[i]);
+        if (!chunkStreams[i]) {
+            std::cerr << "Error: Cannot open temporary file: " << tempFiles[i] << std::endl;
+            continue;
+        }
+        std::string line;
+        if (std::getline(chunkStreams[i], line)) {
+            std::istringstream iss(line);
+            People person;
+            if (iss >> person) {
+                minHeap.push({person, i});
+            }
+        }
+    }
+
+    std::ofstream outFile(outputFile, std::ios::out | std::ios::trunc);
+    if (!outFile) {
+        std::cerr << "Error: Cannot open output file: " << outputFile << std::endl;
+        return;
+    }
+
+    while (!minHeap.empty()) {
+        auto [person, index] = minHeap.top();
+        minHeap.pop();
+        outFile << person << "\n";
+
+        std::string line;
+        if (std::getline(chunkStreams[index], line)) {
+            std::istringstream iss(line);
+            People nextPerson;
+            if (iss >> nextPerson) {
+                minHeap.push({nextPerson, index});
+            }
+        }
+    }
+
+    for (auto &stream : chunkStreams) {
+        if (stream.is_open()) {
+            stream.close();
+        }
+    }
+
+    // Удаляем временные файлы
+    for (const auto &file : tempFiles) {
+        std::remove(file.c_str());
+    }
+}
 void GenerateRandomFile(int count, std::string& fileName)
 {
     std::ofstream file(fileName);

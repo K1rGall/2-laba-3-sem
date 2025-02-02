@@ -1,30 +1,23 @@
-#ifndef Timesorters_H
-#define Timesorters_H
+#ifndef TIMESORTERS_H
+#define TIMESORTERS_H
 
+#include "Sequence.h"
 #include <chrono>
-#include "DynamicArray.h"
-#include "LinkedList.h"
-#include "sorters.h"
 
-template<typename T>
-void SortSequenceByQuickSort(Sequence<T>* array, double* durationSorting)
-{
-    Sorter<T> sorter;
+template <typename T>
+void SortSequenceByQuickSort(Sequence<T>* sequence, double* duration) {
     auto start = std::chrono::high_resolution_clock::now();
-    sorter.QuickSort(array);
+    sequence->QuickSort();
     auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration = end - start;
-    *durationSorting = duration.count();
+    *duration = std::chrono::duration<double>(end - start).count();
 }
 
-template<typename T>
-void SortSequenceByMergeSort(Sequence<T>* array, double* durationSorting)
-{
-    Sorter<T> sorter;
+template <typename T>
+void SortSequenceByMergeSort(Sequence<T>* sequence, double* duration) {
     auto start = std::chrono::high_resolution_clock::now();
-    sorter.MergeSort(array);
+    sequence->MergeSort();
     auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration = end - start;
-    *durationSorting = duration.count();
+    *duration = std::chrono::duration<double>(end - start).count();
 }
-#endif
+
+#endif // TIMESORTERS_H

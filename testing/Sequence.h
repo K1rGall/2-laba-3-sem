@@ -17,6 +17,8 @@ public:
     virtual void Prepend(T item) = 0;
     virtual void InsertAt(T item, int index) = 0;
     virtual void Union(Sequence<T>* list) = 0;
+    virtual void QuickSort() = 0;
+    virtual void MergeSort() = 0;
     virtual ~Sequence() {}
 
     class Iterator {

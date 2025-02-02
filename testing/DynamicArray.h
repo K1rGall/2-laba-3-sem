@@ -2,37 +2,75 @@
 #define DYNAMIC_ARRAY_H
 
 #include "Sequence.h"
+#include <vector>
+#include <algorithm>
 
 template <class T>
 class DynamicArray : public Sequence<T>
 {
 private:
-    T* data;
-    int size;
+    std::vector<T> data; // Используем std::vector вместо сырого массива
 
-    void Resize(int newSize)
-    {
-        T* newData = new T[newSize];
-
-        int minSize = (newSize < size) ? newSize : size;
-
-        for (int i = 0; i < minSize; ++i)
-        {
-            newData[i] = data[i];
+    void QuickSortHelper(int left, int right) {
+        if (left < right) {
+            int pivotIndex = Partition(left, right);
+            QuickSortHelper(left, pivotIndex - 1);
+            QuickSortHelper(pivotIndex + 1, right);
         }
+    }
 
-        delete[] data;
-        data = newData;
-        size = newSize;
+    int Partition(int left, int right) {
+        T pivot = data[right];
+        int i = left - 1;
+        for (int j = left; j < right; j++) {
+            if (data[j] < pivot) {
+                i++;
+                std::swap(data[i], data[j]);
+            }
+        }
+        std::swap(data[i + 1], data[right]);
+        return i + 1;
+    }
+
+    void MergeSortHelper(int left, int right) {
+        if (left < right) {
+            int mid = left + (right - left) / 2;
+            MergeSortHelper(left, mid);
+            MergeSortHelper(mid + 1, right);
+            Merge(left, mid, right);
+        }
+    }
+
+    void Merge(int left, int mid, int right) {
+        std::vector<T> leftArray(data.begin() + left, data.begin() + mid + 1);
+        std::vector<T> rightArray(data.begin() + mid + 1, data.begin() + right + 1);
+
+        int i = 0, j = 0, k = left;
+        while (i < leftArray.size() && j < rightArray.size()) {
+            if (leftArray[i] <= rightArray[j]) {
+                data[k++] = leftArray[i++];
+            } else {
+                data[k++] = rightArray[j++];
+            }
+        }
+        while (i < leftArray.size()) {
+            data[k++] = leftArray[i++];
+        }
+        while (j < rightArray.size()) {
+            data[k++] = rightArray[j++];
+        }
     }
 
 public:
+    void QuickSort() override { QuickSortHelper(0, data.size() - 1); }
+    void MergeSort() override { MergeSortHelper(0, data.size() - 1); }
+
     class DynamicArrayIterator : public Sequence<T>::Iterator {
     private:
-        T* current;
+        typename std::vector<T>::iterator current;
 
     public:
-        DynamicArrayIterator(T* current) : current(current) { }
+        DynamicArrayIterator(typename std::vector<T>::iterator current) : current(current) {}
 
         bool operator==(const typename Sequence<T>::Iterator& other) const override
         {
@@ -52,56 +90,30 @@ public:
 
         typename Sequence<T>::Iterator& operator++() override
         {
-            current++;
-
+            ++current;
             return *this;
         }
     };
 
     typename Sequence<T>::Iterator* ToBegin() override
     {
-        return new DynamicArrayIterator(data);
+        return new DynamicArrayIterator(data.begin());
     }
 
     typename Sequence<T>::Iterator* ToEnd() override
     {
-        return new DynamicArrayIterator(data + size);
+        return new DynamicArrayIterator(data.end());
     }
 
-    DynamicArray() : size(0) {}
+    DynamicArray() {}
 
-    DynamicArray(T* items, int size)
-    {
-        this->size = size;
-        data = new T[size];
+    DynamicArray(T* items, int size) : data(items, items + size) {}
 
-        for (int i = 0; i < size; ++i)
-        {
-            Set(i, items[i]);
-        }
-    }
+    DynamicArray(int size) : data(size) {}
 
-    DynamicArray(int size)
-    {
-        this->size = size;
-        data = new T[size];
-    }
+    DynamicArray(DynamicArray<T>& dynamicArray) : data(dynamicArray.data) {}
 
-    DynamicArray(DynamicArray<T>& dynamicArray)
-    {
-        size = dynamicArray.size;
-        data = new T[size];
-
-        for (int i = 0; i < size; ++i)
-        {
-            Set(i, dynamicArray.data[i]);
-        }
-    }
-
-    ~DynamicArray()
-    {
-        delete[] data;
-    }
+    ~DynamicArray() {} // Нет необходимости в delete[] data, так как vector управляет памятью
 
     T& operator[](int index)
     {
@@ -110,24 +122,22 @@ public:
 
     T& GetFirstElement() override
     {
-        return GetElement(0);
+        return data.front();
     }
 
     T& GetLastElement() override
     {
-        return GetElement(size - 1);
+        return data.back();
     }
 
     T& GetElement(int index) override
     {
-        return data[index];
+        return data.at(index);
     }
 
     void Swap(T& a, T& b) override
     {
-        T temp = a;
-        a = b;
-        b = temp;
+        std::swap(a, b);
     }
 
     void Set(int index, T value) override
@@ -137,75 +147,36 @@ public:
 
     DynamicArray<T>* GetSubsequence(int startIndex, int endIndex) override
     {
-        int length;
-
-        if (endIndex > size)
-        {
-            length = size - startIndex;
-        }
-        else
-        {
-            length = endIndex - startIndex + 1;
-
-            if (startIndex == 0)
-            {
-                length -= 1;
-            }
-        }
-
-        T* items = new T[length];
-
-        for (int i = 0; i < length; i++)
-        {
-            items[i] = GetElement(startIndex + i);
-        }
-
-        return new DynamicArray<T>(items, length);
+        return new DynamicArray<T>(data.data() + startIndex, endIndex - startIndex + 1);
     }
 
     int GetLength() override
     {
-        return size;
+        return data.size();
     }
 
-    void Append(T data) override
+    void Append(T item) override
     {
-        InsertAt(data, size);
+        data.push_back(item);
     }
 
-    void Append(T* data, int dataSize) override
+    void Append(T* items, int dataSize) override
     {
-        int oldSize = size;
-
-        Resize(size + dataSize);
-
-        for (int i = oldSize; i < oldSize + dataSize; i++)
-        {
-            Set(i, data[i - oldSize]);
-        }
+        data.insert(data.end(), items, items + dataSize);
     }
 
-    void Prepend(T data) override
+    void Prepend(T item) override
     {
-        InsertAt(data, 0);
+        data.insert(data.begin(), item);
     }
 
-    void InsertAt(T data, int index) override
+    void InsertAt(T item, int index) override
     {
-        Resize(size + 1);
-
-        for (int i = size - 1; i > index; i--)
-        {
-            Set(i, GetElement(i - 1));
-        }
-
-        Set(index, data);
+        data.insert(data.begin() + index, item);
     }
 
     void Union(Sequence<T>* dynamicArray) override
     {
-        int oldSize = size;
-
         for (int i = 0; i < dynamicArray->GetLength(); i++)
         {
             Append(dynamicArray->GetElement(i));
@@ -213,4 +184,4 @@ public:
     }
 };
 
-#endif
+#endif // DYNAMIC_ARRAY_H
